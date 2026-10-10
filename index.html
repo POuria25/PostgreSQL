@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PostgreSQL Reference</title>
+<meta name="description" content="A practical PostgreSQL reference: concepts, SQL, transactions, indexing, security and operations.">
+<style>
+:root{--bg:#fff;--surface:#f6f7f9;--text:#1c2128;--muted:#59636e;--border:#d8dce1;--accent:#1f4e8c;--ac:#fff;--code:#f0f2f5}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1216;--surface:#161b21;--text:#e6e9ed;--muted:#9aa4af;--border:#2a313a;--accent:#6aa3e8;--ac:#0f1216;--code:#1b2129}}
+:root[data-theme=dark]{--bg:#0f1216;--surface:#161b21;--text:#e6e9ed;--muted:#9aa4af;--border:#2a313a;--accent:#6aa3e8;--ac:#0f1216;--code:#1b2129}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border)}
+.bar{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-weight:600}
+button{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.hero{background:var(--surface);border-bottom:1px solid var(--border)}
+.hero div{max-width:1100px;margin:0 auto;padding:48px 16px}
+.hero h1{margin:0 0 12px;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.2}
+.hero p{margin:0;max-width:62ch;color:var(--muted);font-size:1.1rem}
+.layout{max-width:1100px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px}
+aside{position:sticky;top:72px;align-self:start;padding:28px 0;font-size:.88rem;max-height:calc(100vh - 80px);overflow:auto}
+aside h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+aside ol{list-style:none;margin:0;padding:0}aside a{display:block;padding:3px 0;color:var(--muted);text-decoration:none}aside a:hover{color:var(--accent)}
+main{padding:32px 0 64px;min-width:0}
+section{padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:24px}
+h2{font-size:1.5rem;margin:12px 0}
+.tablewrap{overflow-x:auto;margin:12px 0}table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--border);padding:7px 12px;text-align:left;vertical-align:top}th{background:var(--surface)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--code);padding:.1em .35em;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--border);border-radius:6px;padding:14px 16px;overflow-x:auto;line-height:1.5}
+pre code{background:none;padding:0;font-size:.85rem}
+footer{border-top:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.88rem;padding:24px 16px;text-align:center}
+@media(max-width:820px){.layout{grid-template-columns:1fr;gap:0}aside{display:none}}
+</style></head><body>
+<header><div class="bar"><span class="brand">PostgreSQL Reference</span><button id="t" type="button" aria-label="Toggle theme">Theme</button></div></header>
+<div class="hero"><div><h1>PostgreSQL: A Practical Reference</h1><p>Core concepts, SQL, transactions, indexing, security and operations. Written for PostgreSQL 16.</p></div></div>
+<div class="layout"><aside><h2>Contents</h2><ol><li><a href="#sql-and-postgresql">1. SQL and PostgreSQL</a></li><li><a href="#core-concepts">2. Core concepts</a></li><li><a href="#data-types">3. Data types</a></li><li><a href="#defining-tables-and-constraints">4. Defining tables and constraints</a></li><li><a href="#querying-data">5. Querying data</a></li><li><a href="#joins-and-aggregation">6. Joins and aggregation</a></li><li><a href="#advanced-queries">7. Advanced queries</a></li><li><a href="#transactions-mvcc-and-locking">8. Transactions, MVCC and locking</a></li><li><a href="#indexes-and-query-plans">9. Indexes and query plans</a></li><li><a href="#programmability">10. Programmability</a></li><li><a href="#roles-privileges-and-row-level-security">11. Roles, privileges and row-level security</a></li><li><a href="#operations">12. Operations</a></li><li><a href="#common-mistakes">13. Common mistakes</a></li><li><a href="#learning-order">14. Learning order</a></li><li><a href="#practice-questions">15. Practice questions</a></li><li><a href="#references">16. References</a></li></ol></aside>
+<main><section id="sql-and-postgresql"><h2>1. SQL and PostgreSQL</h2>
+<p><strong>SQL</strong> is a standardised language (ISO/IEC 9075) for defining and querying relational data.</p>
+<p><strong>PostgreSQL</strong> is a database management system (DBMS) that implements SQL and adds its own extensions.</p>
+<div class="tablewrap"><table><thead><tr><th>Aspect</th><th>SQL</th><th>PostgreSQL</th></tr></thead><tbody><tr><td>Nature</td><td>Language specification</td><td>Server software (a DBMS)</td></tr><tr><td>Provides</td><td>Syntax and semantics for queries</td><td>Storage engine, planner, transactions, replication</td></tr><tr><td>Portability</td><td>Largely portable</td><td>Extensions (<code>jsonb</code>, arrays, <code>RETURNING</code>) are PostgreSQL-specific</td></tr></tbody></table></div>
+<p>Other systems implementing SQL include MySQL, SQLite, Oracle and SQL Server. Each differs in dialect and features.</p></section>
+<section id="core-concepts"><h2>2. Core concepts</h2>
+<ul><li><strong>Relation (table):</strong> a set of rows sharing the same columns (Codd, 1970).</li><li><strong>Row (tuple) and column (attribute):</strong> a record and one of its typed fields.</li><li><strong>Schema:</strong> a namespace inside a database (default: <code>public</code>).</li><li><strong>Primary key:</strong> uniquely identifies a row. <strong>Foreign key:</strong> references a key in another table.</li><li><strong>Transaction:</strong> a group of statements that succeed or fail together (ACID).</li></ul>
+<pre><code>cluster ─▶ database ─▶ schema ─▶ table / view / index / function</code></pre>
+<p>Connecting and inspecting with <code>psql</code>:</p>
+<pre><code>psql -h localhost -U app_user -d appdb</code></pre>
+<pre><code>\l            list databases          \dt           list tables
+\d tablename  describe a table        \du           list roles
+\x            toggle expanded output  \timing       show query time</code></pre></section>
+<section id="data-types"><h2>3. Data types</h2>
+<div class="tablewrap"><table><thead><tr><th>Category</th><th>Common types</th><th>Notes</th></tr></thead><tbody><tr><td>Integers</td><td><code>smallint</code>, <code>integer</code>, <code>bigint</code></td><td>Prefer <code>bigint</code> for identifiers</td></tr><tr><td>Exact numbers</td><td><code>numeric(p,s)</code></td><td>Use for money; never <code>float</code></td></tr><tr><td>Text</td><td><code>text</code>, <code>varchar(n)</code></td><td><code>text</code> has no performance penalty versus <code>varchar</code></td></tr><tr><td>Boolean</td><td><code>boolean</code></td><td><code>true</code>, <code>false</code>, <code>NULL</code></td></tr><tr><td>Date and time</td><td><code>date</code>, <code>timestamptz</code>, <code>interval</code></td><td>Prefer <code>timestamptz</code> over <code>timestamp</code></td></tr><tr><td>Identifiers</td><td><code>uuid</code></td><td><code>gen_random_uuid()</code> is built in</td></tr><tr><td>Semi-structured</td><td><code>jsonb</code>, arrays</td><td><code>jsonb</code> is binary and indexable</td></tr><tr><td>Enumerations</td><td><code>CREATE TYPE ... AS ENUM</code></td><td>Adding values is easy; removing is not</td></tr></tbody></table></div>
+<p><code>NULL</code> means "unknown". Comparisons with <code>NULL</code> yield <code>NULL</code>, so use <code>IS NULL</code> and <code>IS DISTINCT FROM</code>.</p></section>
+<section id="defining-tables-and-constraints"><h2>4. Defining tables and constraints</h2>
+<pre><code>CREATE TABLE customers (
+    id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email      text        NOT NULL UNIQUE,
+    name       text        NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE orders (
+    id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customer_id bigint      NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
+    status      text        NOT NULL DEFAULT 'new'
+                CHECK (status IN ('new','paid','shipped','cancelled')),
+    placed_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE order_items (
+    order_id   bigint  NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    line_no    integer NOT NULL,
+    sku        text    NOT NULL,
+    quantity   integer NOT NULL CHECK (quantity &gt; 0),
+    unit_price numeric(12,2) NOT NULL CHECK (unit_price &gt;= 0),
+    PRIMARY KEY (order_id, line_no)          -- composite key
+);</code></pre>
+<ul><li><code>GENERATED ... AS IDENTITY</code> is the standard replacement for <code>serial</code>.</li><li>Foreign keys do <strong>not</strong> create an index on the referencing column; add one if you join or delete through it.</li><li><code>ON DELETE</code> actions: <code>RESTRICT</code>, <code>NO ACTION</code>, <code>CASCADE</code>, <code>SET NULL</code>, <code>SET DEFAULT</code>.</li></ul>
+<p>Changing a schema:</p>
+<pre><code>ALTER TABLE customers ADD COLUMN phone text;
+ALTER TABLE customers ALTER COLUMN name SET NOT NULL;
+ALTER TABLE customers DROP COLUMN phone;</code></pre></section>
+<section id="querying-data"><h2>5. Querying data</h2>
+<pre><code>INSERT INTO customers (email, name)
+VALUES ('ada@example.org', 'Ada')
+RETURNING id;
+
+UPDATE orders SET status = 'paid' WHERE id = 1 RETURNING *;
+DELETE FROM orders WHERE status = 'cancelled';
+
+SELECT id, email
+FROM   customers
+WHERE  created_at &gt;= now() - interval '30 days'
+ORDER  BY created_at DESC
+LIMIT  10 OFFSET 0;</code></pre>
+<p>Logical evaluation order: <code>FROM</code> → <code>WHERE</code> → <code>GROUP BY</code> → <code>HAVING</code> → <code>SELECT</code> → <code>ORDER BY</code> → <code>LIMIT</code>.</p>
+<p>Upsert:</p>
+<pre><code>INSERT INTO customers (email, name)
+VALUES ('ada@example.org', 'Ada L.')
+ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name;</code></pre>
+<p>Pagination: <code>OFFSET</code> scans and discards rows. For large tables use keyset pagination:</p>
+<pre><code>SELECT * FROM orders WHERE id &gt; 1000 ORDER BY id LIMIT 50;</code></pre></section>
+<section id="joins-and-aggregation"><h2>6. Joins and aggregation</h2>
+<pre><code>-- INNER JOIN: only matching rows
+SELECT c.name, o.id
+FROM   customers c JOIN orders o ON o.customer_id = c.id;
+
+-- LEFT JOIN: keep all customers, even without orders
+SELECT c.name, count(o.id) AS orders
+FROM   customers c LEFT JOIN orders o ON o.customer_id = c.id
+GROUP  BY c.id, c.name
+HAVING count(o.id) &gt;= 0
+ORDER  BY orders DESC;</code></pre>
+<div class="tablewrap"><table><thead><tr><th>Join</th><th>Returns</th></tr></thead><tbody><tr><td><code>INNER</code></td><td>Rows matching in both tables</td></tr><tr><td><code>LEFT</code> / <code>RIGHT</code></td><td>All rows from one side, matches from the other (else <code>NULL</code>)</td></tr><tr><td><code>FULL</code></td><td>All rows from both sides</td></tr><tr><td><code>CROSS</code></td><td>Cartesian product</td></tr></tbody></table></div>
+<p><code>WHERE</code> filters rows before grouping; <code>HAVING</code> filters groups after aggregation.</p>
+<p>Aggregates: <code>count</code>, <code>sum</code>, <code>avg</code>, <code>min</code>, <code>max</code>, <code>string_agg</code>, <code>array_agg</code>, and <code>FILTER</code>:</p>
+<pre><code>SELECT count(*) FILTER (WHERE status = 'paid') AS paid,
+       count(*)                                AS total
+FROM   orders;</code></pre></section>
+<section id="advanced-queries"><h2>7. Advanced queries</h2>
+<p><strong>Subqueries and <code>EXISTS</code></strong></p>
+<pre><code>SELECT * FROM customers c
+WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);</code></pre>
+<p><strong>Common table expressions (CTEs)</strong></p>
+<pre><code>WITH recent AS (
+    SELECT * FROM orders WHERE placed_at &gt; now() - interval '7 days'
+)
+SELECT customer_id, count(*) FROM recent GROUP BY customer_id;</code></pre>
+<p><strong>Recursive CTEs</strong> (hierarchies)</p>
+<pre><code>WITH RECURSIVE n(i) AS (
+    SELECT 1
+    UNION ALL
+    SELECT i + 1 FROM n WHERE i &lt; 5
+)
+SELECT * FROM n;</code></pre>
+<p><strong>Window functions</strong></p>
+<pre><code>SELECT id, customer_id, placed_at,
+       row_number() OVER (PARTITION BY customer_id ORDER BY placed_at DESC) AS rn,
+       sum(1)       OVER (PARTITION BY customer_id)                          AS customer_orders
+FROM   orders;</code></pre>
+<p><strong><code>jsonb</code></strong></p>
+<pre><code>CREATE TABLE events (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, payload jsonb NOT NULL);
+INSERT INTO events (payload) VALUES ('{"type":"login","user":{"id":7}}');
+
+SELECT payload-&gt;&gt;'type', payload-&gt;'user'-&gt;&gt;'id' FROM events;
+SELECT * FROM events WHERE payload @&gt; '{"type":"login"}';
+CREATE INDEX events_payload_gin ON events USING gin (payload);</code></pre>
+<p><strong>Full-text search</strong></p>
+<pre><code>CREATE TABLE docs (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, body text,
+    tsv tsvector GENERATED ALWAYS AS (to_tsvector('english', body)) STORED);
+CREATE INDEX docs_tsv ON docs USING gin (tsv);
+SELECT id FROM docs WHERE tsv @@ websearch_to_tsquery('english', 'postgres index');</code></pre>
+<p><strong>Set operations:</strong> <code>UNION</code>, <code>INTERSECT</code>, <code>EXCEPT</code> (add <code>ALL</code> to keep duplicates).</p></section>
+<section id="transactions-mvcc-and-locking"><h2>8. Transactions, MVCC and locking</h2>
+<p>A transaction groups statements; PostgreSQL guarantees <strong>ACID</strong>: atomicity, consistency, isolation, durability.</p>
+<pre><code>BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;            -- or ROLLBACK;</code></pre>
+<p><strong>MVCC (multiversion concurrency control).</strong> An update creates a new row version instead of overwriting.</p>
+<p>Readers see a snapshot and do not block writers, and writers do not block readers. Old versions are removed by</p>
+<p><code>VACUUM</code>.</p>
+<p><strong>Isolation levels</strong></p>
+<div class="tablewrap"><table><thead><tr><th>Level</th><th>Dirty read</th><th>Non-repeatable read</th><th>Phantom</th><th>Notes</th></tr></thead><tbody><tr><td>Read Committed (default)</td><td>No</td><td>Possible</td><td>Possible</td><td>New snapshot per statement</td></tr><tr><td>Repeatable Read</td><td>No</td><td>No</td><td>No in PostgreSQL</td><td>Snapshot per transaction; may raise serialization failures</td></tr><tr><td>Serializable</td><td>No</td><td>No</td><td>No</td><td>Serializable Snapshot Isolation; retry on error <code>40001</code></td></tr></tbody></table></div>
+<p>PostgreSQL treats <code>READ UNCOMMITTED</code> as <code>READ COMMITTED</code>. Background: Berenson et al., 1995.</p>
+<p><strong>Explicit row locks</strong></p>
+<pre><code>SELECT * FROM orders WHERE id = 1 FOR UPDATE;           -- exclusive row lock
+SELECT * FROM orders WHERE id = 1 FOR SHARE;            -- block writers, allow readers
+
+-- Work queue: each worker takes a different row without waiting
+SELECT id FROM jobs WHERE status = 'queued'
+ORDER BY id LIMIT 1
+FOR UPDATE SKIP LOCKED;</code></pre>
+<p><strong>Deadlocks</strong> occur when transactions wait for each other in a cycle. PostgreSQL aborts one. Avoid them by</p>
+<p>locking rows in a consistent order.</p>
+<p><strong>Advisory locks:</strong> <code>pg_advisory_xact_lock(key)</code> provides application-level mutual exclusion.</p></section>
+<section id="indexes-and-query-plans"><h2>9. Indexes and query plans</h2>
+<div class="tablewrap"><table><thead><tr><th>Index</th><th>Use for</th></tr></thead><tbody><tr><td>B-tree (default)</td><td>Equality and range, sorting</td></tr><tr><td>Hash</td><td>Equality only</td></tr><tr><td>GIN</td><td><code>jsonb</code>, arrays, full-text search</td></tr><tr><td>GiST</td><td>Geometry, ranges, nearest-neighbour</td></tr><tr><td>BRIN</td><td>Very large, naturally ordered tables</td></tr></tbody></table></div>
+<pre><code>CREATE INDEX orders_customer_idx ON orders (customer_id);
+CREATE INDEX orders_paid_idx ON orders (placed_at) WHERE status = 'paid';   -- partial
+CREATE UNIQUE INDEX customers_lower_email ON customers (lower(email));       -- expression
+CREATE INDEX CONCURRENTLY orders_status_idx ON orders (status);             -- no write lock</code></pre>
+<p>Reading a plan:</p>
+<pre><code>EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;</code></pre>
+<div class="tablewrap"><table><thead><tr><th>Plan node</th><th>Meaning</th></tr></thead><tbody><tr><td><code>Seq Scan</code></td><td>Reads the whole table</td></tr><tr><td><code>Index Scan</code> / <code>Index Only Scan</code></td><td>Uses an index (and possibly the heap)</td></tr><tr><td><code>Bitmap Heap Scan</code></td><td>Collects matching pages, then reads them</td></tr><tr><td><code>Nested Loop</code> / <code>Hash Join</code> / <code>Merge Join</code></td><td>Join strategies</td></tr></tbody></table></div>
+<p>Guidelines: index columns used in <code>WHERE</code>, <code>JOIN</code> and <code>ORDER BY</code>; in a multi-column index put equality columns</p>
+<p>first; every index slows writes; run <code>ANALYZE</code> after large changes so statistics stay current.</p></section>
+<section id="programmability"><h2>10. Programmability</h2>
+<pre><code>-- View
+CREATE VIEW paid_orders AS SELECT * FROM orders WHERE status = 'paid';
+
+-- Function
+CREATE FUNCTION order_total(p_order bigint) RETURNS numeric
+LANGUAGE sql STABLE AS $$
+    SELECT coalesce(sum(quantity * unit_price), 0) FROM order_items WHERE order_id = p_order;
+$$;
+
+-- Trigger
+CREATE FUNCTION touch_updated() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at := now(); RETURN NEW; END $$;
+
+CREATE TRIGGER trg_touch BEFORE UPDATE ON some_table
+FOR EACH ROW EXECUTE FUNCTION touch_updated();</code></pre>
+<p>Also available: materialized views (<code>REFRESH MATERIALIZED VIEW</code>), stored procedures (<code>CALL</code>), <code>LISTEN</code>/<code>NOTIFY</code>,</p>
+<p>table partitioning, and extensions (<code>CREATE EXTENSION</code>, for example <code>pg_trgm</code>, <code>pgcrypto</code>, <code>pgvector</code>).</p></section>
+<section id="roles-privileges-and-row-level-security"><h2>11. Roles, privileges and row-level security</h2>
+<pre><code>CREATE ROLE app_user LOGIN PASSWORD '&lt;secret&gt;';
+CREATE ROLE readonly NOLOGIN;
+GRANT CONNECT ON DATABASE appdb TO app_user;
+GRANT USAGE ON SCHEMA public TO readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly;
+GRANT readonly TO app_user;</code></pre>
+<p><strong>Row-level security</strong></p>
+<pre><code>ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own_orders ON orders
+    USING (customer_id = current_setting('app.customer_id')::bigint);</code></pre>
+<p>Security practice:</p>
+<ul><li>Use parameterised queries; never build SQL by string concatenation (SQL injection).</li><li>Give applications a role with the minimum privileges, not a superuser.</li><li>Require TLS (<code>sslmode=verify-full</code>) for remote connections.</li><li>Store password hashes with <code>scram-sha-256</code> (<code>password_encryption</code>).</li><li>Restrict network access in <code>pg_hba.conf</code>:</li></ul>
+<pre><code># TYPE  DATABASE  USER      ADDRESS        METHOD
+hostssl appdb     app_user  10.0.0.0/24    scram-sha-256</code></pre></section>
+<section id="operations"><h2>12. Operations</h2>
+<p><strong>Backup and restore</strong></p>
+<pre><code>pg_dump  -Fc -d appdb -f appdb.dump                  # logical backup, custom format
+pg_restore -d appdb_new --no-owner appdb.dump        # restore
+pg_dumpall --globals-only &gt; globals.sql              # roles and tablespaces</code></pre>
+<p>For point-in-time recovery (PITR), take a base backup (<code>pg_basebackup</code>) and archive WAL files</p>
+<p>(<code>archive_mode = on</code>, <code>archive_command</code>).</p>
+<p><strong>Maintenance</strong></p>
+<ul><li><code>VACUUM</code> reclaims dead row versions; <code>autovacuum</code> runs it automatically. <code>VACUUM FULL</code> rewrites the table and locks it.</li><li><code>ANALYZE</code> refreshes planner statistics.</li><li><code>REINDEX</code> rebuilds bloated indexes.</li></ul>
+<p><strong>Monitoring</strong></p>
+<pre><code>SELECT pid, state, wait_event, query FROM pg_stat_activity WHERE state &lt;&gt; 'idle';
+SELECT relname, n_dead_tup FROM pg_stat_user_tables ORDER BY n_dead_tup DESC LIMIT 10;</code></pre>
+<p><strong>Connections:</strong> each connection is a server process, so use a pool (for example PgBouncer) when there are many clients.</p>
+<p><strong>Replication:</strong> streaming (physical) replication for standbys and failover; logical replication for selected tables.</p>
+<p><strong>Migrations:</strong> apply schema changes as ordered, versioned scripts, in a transaction where possible.</p>
+<p>PostgreSQL supports transactional DDL.</p></section>
+<section id="common-mistakes"><h2>13. Common mistakes</h2>
+<div class="tablewrap"><table><thead><tr><th>Mistake</th><th>Better practice</th></tr></thead><tbody><tr><td><code>timestamp</code> without time zone</td><td>Use <code>timestamptz</code></td></tr><tr><td><code>serial</code> for new tables</td><td>Use <code>GENERATED ... AS IDENTITY</code></td></tr><tr><td><code>float</code> for money</td><td>Use <code>numeric</code></td></tr><tr><td><code>SELECT *</code> in application code</td><td>List the columns you need</td></tr><tr><td><code>= NULL</code></td><td><code>IS NULL</code></td></tr><tr><td>No index on a foreign key column</td><td>Index the referencing column</td></tr><tr><td><code>OFFSET</code> pagination on large tables</td><td>Keyset pagination</td></tr><tr><td><code>NOT IN (subquery)</code> with possible <code>NULL</code>s</td><td><code>NOT EXISTS</code></td></tr><tr><td>Dropping and recreating schemas in production</td><td>Versioned migrations</td></tr><tr><td>One superuser role for the application</td><td>Least-privilege roles</td></tr><tr><td>Concurrent "read then write" without locking</td><td><code>SELECT ... FOR UPDATE</code>, or a single atomic statement</td></tr></tbody></table></div></section>
+<section id="learning-order"><h2>14. Learning order</h2>
+<ol><li>SQL basics: <code>SELECT</code>, <code>WHERE</code>, <code>ORDER BY</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>.</li><li>Table design: types, keys, constraints, normalisation.</li><li>Joins and aggregation.</li><li>Transactions and isolation.</li><li>Indexes and <code>EXPLAIN</code>.</li><li>CTEs, window functions, <code>jsonb</code>.</li><li>Roles, privileges and security.</li><li>Backup, restore and monitoring.</li><li>Optional: partitioning, replication, full-text search, extensions.</li></ol></section>
+<section id="practice-questions"><h2>15. Practice questions</h2>
+<ol><li>State the difference between SQL and PostgreSQL.</li><li>Why is <code>WHERE col = NULL</code> never true, and what should you write?</li><li>Compare <code>INNER JOIN</code> and <code>LEFT JOIN</code> using the <code>customers</code> and <code>orders</code> tables.</li><li>What is the difference between <code>WHERE</code> and <code>HAVING</code>?</li><li>Explain how MVCC lets readers and writers avoid blocking each other. What cleans up old row versions?</li><li>Which anomalies does Repeatable Read prevent in PostgreSQL that the SQL standard permits?</li><li>Two workers must claim different jobs from one queue table. Write the query.</li><li>Why can a foreign key column still need its own index?</li><li>When does the planner prefer a sequential scan over an index scan?</li><li>Why is <code>timestamptz</code> preferred over <code>timestamp</code>?</li><li>What is the difference between <code>pg_dump</code> and a base backup with WAL archiving?</li><li>Write a policy that lets each user see only their own rows.</li></ol></section>
+<section id="references"><h2>16. References</h2>
+<ul><li>PostgreSQL Global Development Group. *PostgreSQL 16 Documentation*. <a href="https://www.postgresql.org/docs/16/">https://www.postgresql.org/docs/16/</a></li><li>ISO/IEC 9075. *Information technology — Database languages — SQL*.</li><li>Codd, E. F. (1970). "A Relational Model of Data for Large Shared Data Banks." *Communications of the ACM* 13(6).</li><li>Berenson, H., et al. (1995). "A Critique of ANSI SQL Isolation Levels." *ACM SIGMOD*.</li><li>Ports, D. R. K., and Grittner, K. (2012). "Serializable Snapshot Isolation in PostgreSQL." *PVLDB* 5(12).</li><li>Winand, M. *SQL Performance Explained*. <a href="https://use-the-index-luke.com/">https://use-the-index-luke.com/</a></li></ul></section></main></div>
+<footer>Based on the PostgreSQL 16 documentation. Not affiliated with the PostgreSQL Global Development Group.</footer>
+<script>(function(){var r=document.documentElement;try{var s=localStorage.getItem('theme');if(s)r.setAttribute('data-theme',s)}catch(e){}
+document.getElementById('t').onclick=function(){var c=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var n=c==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}}})();</script>
+</body></html>
